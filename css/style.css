@@ -1,0 +1,1087 @@
+/* ============ 星域突击 样式 ============ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0B1033;
+  --primary: #5FE3E8;
+  --accent: #C79BFF;
+  --gold: #FFD98A;
+  --mint: #7FE8C0;
+  --danger: #FF7A8C;
+  --panel: rgba(22, 28, 76, 0.62);
+  --panel-border: rgba(168, 242, 245, 0.32);
+}
+
+html, body {
+  width: 100%; height: 100%;
+  background: #000;
+  overflow: hidden;
+  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  color: #d8f4ff;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+#stage {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  background: #05081e;
+  box-shadow: 0 0 70px rgba(127, 200, 255, 0.22);
+  max-width: 100vw; max-height: 100vh;   /* 适配兜底：任何视口都不溢出 */
+}
+
+#game {
+  display: block;
+  background: var(--bg);
+}
+
+.hidden { display: none !important; }
+
+/* ---------- HUD ---------- */
+#hud { position: absolute; inset: 0; pointer-events: none; }
+.hud-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 14px 14px 0;
+}
+.hud-left, .hud-right { display: flex; flex-direction: column; gap: 6px; }
+#hpbar {
+  width: 130px; height: 14px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 7px; overflow: hidden;
+}
+#hpfill {
+  height: 100%; width: 100%;
+  background: linear-gradient(90deg, #00ffd5, var(--primary));
+  transition: width 0.15s linear;
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.7);
+}
+/* 僚机血条：宽度为主机血条（130px）的一半 */
+#dronebar {
+  width: 65px; height: 9px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 5px; overflow: hidden;
+}
+#dronefill {
+  height: 100%; width: 100%;
+  background: linear-gradient(90deg, #ffd98a, #ff9e64);
+  transition: width 0.15s linear;
+  box-shadow: 0 0 6px rgba(255, 217, 138, 0.7);
+}
+#shieldicon { color: var(--gold); font-size: 13px; text-shadow: 0 0 6px var(--gold); }
+#shieldicon span { color: #fff; }
+.hud-wave {
+  margin-top: 4px;
+  letter-spacing: 3px; font-weight: 700; font-size: 16px;
+  color: var(--primary); text-shadow: 0 0 10px var(--primary);
+}
+.hud-score {
+  font-size: 20px; font-weight: 900; text-align: right;
+  color: #fff; text-shadow: 0 0 8px rgba(0,229,255,0.6);
+}
+.hud-coins { text-align: right; font-size: 13px; color: var(--gold); text-shadow: 0 0 6px var(--gold); }
+
+.hud-bottom {
+  position: absolute; left: 14px; bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.hud-bomb { display: flex; align-items: center; gap: 5px; font-weight: 900; font-size: 14px; }
+.bomb-icon { color: var(--accent); text-shadow: 0 0 8px var(--accent); font-size: 18px; }
+#bombnum { color: #fff; }
+#chargewrap {
+  width: 90px; height: 10px;
+  background: var(--panel); border: 1px solid var(--panel-border); border-radius: 5px;
+  overflow: hidden;
+}
+#chargefill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--accent), #ff7ad9);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+/* 游戏内暂停按钮（置于右上信息流末端：score/星星数下方，右对齐不遮挡） */
+.hud-pause {
+  position: static;                 /* 跟随 .hud-right 流式布局，绝对定位改流内 */
+  align-self: flex-end;             /* 右侧对齐，紧贴 score/金币下方 */
+  margin-top: 2px;
+  width: 34px; height: 34px;
+  z-index: 40;
+  background: rgba(10, 25, 47, 0.55);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  border-radius: 8px;
+  color: #7fe9ff; font-size: 13px; font-weight: 700;
+  letter-spacing: 1px; line-height: 1;
+  cursor: pointer; user-select: none;
+  pointer-events: auto;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.hud-pause:hover {
+  background: rgba(0, 229, 255, 0.18);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+}
+
+/* 关卡信息（中央） */
+.hud-center {
+  position: absolute; left: 50%; top: 10px; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.hud-level {
+  font-size: 11px; letter-spacing: 2px; color: var(--accent);
+  text-shadow: 0 0 8px rgba(199,155,255,0.8);
+}
+.hud-time {
+  font-size: 12px; color: rgba(216,244,255,0.85); letter-spacing: 1px;
+}
+.hud-time.danger { color: var(--danger); text-shadow: 0 0 8px rgba(255,122,140,0.9); animation: blink 0.8s infinite; }
+@keyframes blink { 50% { opacity: 0.45; } }
+#slowicon {
+  color: var(--accent); font-size: 12px;
+  text-shadow: 0 0 8px rgba(199,155,255,0.9);
+}
+
+/* 波次歼敌进度条 */
+#waveprogress {
+  position: absolute; top: 74px; left: 50%; transform: translateX(-50%);
+  width: 150px; height: 5px;
+  background: rgba(0, 229, 255, 0.14);
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  border-radius: 3px; overflow: hidden;
+}
+#wavefill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #00ffd5, #00e5ff);
+  box-shadow: 0 0 6px rgba(0, 229, 255, 0.8);
+  transition: width 0.18s linear;
+}
+
+/* Boss 血条 */
+#bossbar {
+  position: absolute; top: 46px; left: 50%; transform: translateX(-50%);
+  width: 78%; text-align: center;
+}
+#bossback {
+  width: 100%; height: 10px; background: rgba(255,255,255,0.12);
+  border: 1px solid var(--panel-border); border-radius: 5px; overflow: hidden;
+}
+#bossfill {
+  height: 100%; width: 100%;
+  background: linear-gradient(90deg, var(--danger), #ff7a5c);
+  box-shadow: 0 0 10px var(--danger);
+}
+#bossname { margin-top: 3px; font-size: 11px; letter-spacing: 2px; color: var(--danger); }
+
+/* Combo */
+#combo {
+  position: absolute; right: 16px; top: 40%;
+  font-size: 26px; font-weight: 900; text-align: right;
+  color: var(--primary); text-shadow: 0 0 12px var(--primary);
+}
+#combo.hot { color: var(--gold); text-shadow: 0 0 12px var(--gold); }
+#combo.onfire { color: var(--accent); text-shadow: 0 0 12px var(--accent); }
+
+/* ---------- 界面 Screen ---------- */
+.screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; padding: 30px;
+  background: rgba(5, 8, 24, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.screen-title { letter-spacing: 4px; font-size: 20px; color: #fff; text-shadow: 0 0 10px var(--primary); }
+
+/* ---------- 屏幕适配兜底：窄屏/矮屏收紧间距与字号，保证 HUD 与菜单不溢出 ---------- */
+@media (max-width: 520px), (max-height: 620px) {
+  .screen { gap: 10px; padding: 14px; }
+  .screen-title { font-size: 16px; letter-spacing: 2px; }
+  .hud-top { padding: 8px 8px 0; }
+  .hud-score { font-size: 16px; }
+  #hpbar { width: 100px; }
+  #dronebar { width: 52px; }
+  .menu-foot { gap: 2px; }
+  .diff-row { gap: 6px; }
+  .btn { font-size: 13px; padding: 9px 16px; }
+}
+@media (max-width: 400px), (max-height: 540px) {
+  .screen { gap: 7px; padding: 10px; }
+  .screen-title { font-size: 14px; }
+  .hud-score { font-size: 14px; }
+  #hpbar { width: 84px; }
+  .btn { font-size: 12px; padding: 8px 13px; }
+}
+
+/* ---------- 主菜单：全息环形 UI（多层视差滞空感） ---------- */
+#screen-menu {
+  background:
+    radial-gradient(ellipse 90% 45% at 50% 26%, rgba(95,227,232,0.10) 0%, transparent 62%),
+    radial-gradient(ellipse at 22% 62%, rgba(40,25,70,0.22) 0%, transparent 52%),
+    radial-gradient(ellipse at 78% 12%, rgba(20,40,70,0.26) 0%, transparent 52%),
+    linear-gradient(180deg, rgba(4,7,22,0.30) 0%, rgba(4,7,22,0.52) 55%, rgba(3,5,16,0.70) 100%);
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+  gap: 0;
+  padding: 40px 20px 46px;
+  justify-content: space-between;   /* 上下撑开：标题区贴顶、底部功能区贴底，中间留呼吸 */
+  animation: menuBreath 8s ease-in-out infinite;   /* 超现实治愈：整体微幅呼吸 */
+}
+/* 底部功能区：难度选择与注释/数据紧密成群，不再被均分拉远 */
+.menu-foot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+@keyframes menuBreath {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  50%      { filter: brightness(1.06) saturate(1.1); }
+}
+
+/* 深空浮尘层（视差最底层：极慢漂移） */
+.menu-deep {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(168,242,245,0.55) 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 12%, rgba(199,155,255,0.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 42% 62%, rgba(255,217,138,0.35) 50%, transparent 51%),
+    radial-gradient(2px 2px at 88% 78%, rgba(168,242,245,0.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 8% 85%, rgba(127,232,192,0.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 65% 45%, rgba(168,242,245,0.5) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 25% 48%, rgba(199,155,255,0.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 92% 35%, rgba(168,242,245,0.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 3% 55%, rgba(255,217,138,0.3) 50%, transparent 51%),
+    radial-gradient(1px 1px at 55% 8%, rgba(168,242,245,0.5) 50%, transparent 51%);
+  animation: deepDrift 90s linear infinite;
+  opacity: 0.85;
+}
+@keyframes deepDrift {
+  0%   { background-position: 0 0; }
+  100% { background-position: 60px 200px; }
+}
+
+/* 选中态光圈（跟随点击在三个按钮间滑动，纯青色无紫色） */
+.orb-selector {
+  position: absolute; z-index: 2; pointer-events: none;
+  width: 100px; height: 100px; border-radius: 50%;
+  border: 2px solid rgba(95,227,232,0.85);
+  box-shadow: 0 0 30px rgba(95,227,232,0.5), inset 0 0 20px rgba(95,227,232,0.2);
+  transition: left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.3s, height 0.3s;
+  opacity: 0.9;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+}
+
+.menu-hero { position: relative; width: 100%; flex: 1; display: flex; align-items: center; justify-content: center; z-index: 1; }  /* 撑满中部空间，出击按钮贴近底部难度区 */
+
+/* 单层科技轨道环（虚线慢旋，低透明度不喧宾夺主） */
+.holo-ring { position: absolute; left: 50%; top: 50%; border-radius: 50%; pointer-events: none; }
+.holo-ring.r1 {
+  width: 260px; height: 260px;
+  border: 1px dashed rgba(95, 227, 232, 0.22);
+  box-shadow: 0 0 60px rgba(95,227,232,0.05) inset;
+  animation: ringSpin 32s linear infinite;
+}
+/* 四角科技角框（HUD 取景框） */
+.menu-frame { position: absolute; inset: 26px; pointer-events: none; }
+.menu-frame i { position: absolute; width: 26px; height: 26px; border: 0 solid rgba(95,227,232,0.5); }
+.menu-frame .mf-tl { top: 0; left: 0; border-top-width: 2px; border-left-width: 2px; }
+.menu-frame .mf-tr { top: 0; right: 0; border-top-width: 2px; border-right-width: 2px; }
+.menu-frame .mf-bl { bottom: 0; left: 0; border-bottom-width: 2px; border-left-width: 2px; }
+.menu-frame .mf-br { bottom: 0; right: 0; border-bottom-width: 2px; border-right-width: 2px; }
+@keyframes ringSpin { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+/* 中央霓虹标题（慢幅浮动制造滞空感） */
+.menu-core { text-align: center; z-index: 2; animation: coreFloat 6s ease-in-out infinite; }
+@keyframes coreFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.logo-title {
+  font-size: 46px; font-weight: 900; letter-spacing: 2px; color: #eafcff;
+  text-shadow: 0 0 8px #fff, 0 0 24px var(--primary), 0 0 72px rgba(95,227,232,0.6);
+  animation: neonFlicker 4s ease-in-out infinite;
+}
+.logo-title span { color: var(--primary); text-shadow: 0 0 10px var(--primary), 0 0 40px var(--primary), 0 0 90px rgba(95,227,232,0.5); }
+.logo-sub { margin-top: 10px; letter-spacing: 14px; text-indent: 14px; font-size: 13px; color: var(--accent); text-shadow: 0 0 10px var(--accent); }
+.logo-tag { margin-top: 18px; font-size: 9px; letter-spacing: 4px; color: rgba(168,242,245,0.35); }
+@keyframes neonFlicker { 0%, 100%, 40%, 46%, 52% { opacity: 1; } 43%, 49%, 55% { opacity: 0.82; } }
+
+/* 行星原型按钮（现代天文学特征绘制）
+ * 机库=木星（带区条纹+大红斑+伽利略卫星）/ 设置=土星（淡金条带+卡西尼缝光环+泰坦）/ 出击=地球（蓝海大陆白云+大气晕+月球） */
+.orb {
+  position: absolute; z-index: 3;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  border-radius: 50%; cursor: pointer; font-family: inherit;
+  color: #d8f4ff;
+  background: rgba(10, 20, 48, 0.38);
+  border: 1px solid rgba(95, 227, 232, 0.38);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 24px rgba(95,227,232,0.18),
+    inset 0 0 20px rgba(95,227,232,0.10),
+    inset 0 2px 0 rgba(255,255,255,0.04);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+/* 装饰层（卫星轨道/光环/月球）：高于行星表面、低于文字 */
+.orb-deco { position: absolute; inset: 0; pointer-events: none; }
+.orb b, .orb i { position: relative; z-index: 2; text-shadow: 0 1px 2px rgba(0,0,0,0.95), 0 0 9px rgba(0,0,0,0.8); }
+.orb b { font-size: 15px; font-weight: 700; letter-spacing: 3px; }
+.orb i { font-style: normal; font-size: 8px; letter-spacing: 2px; color: rgba(200,240,248,0.85); }
+/* 原型行星标注（球体外侧下方，不挤压球内文字） */
+.orb-planet {
+  position: absolute; left: 50%; bottom: -19px; transform: translateX(-50%);
+  font-size: 8px; font-style: normal; letter-spacing: 2px; white-space: nowrap;
+  color: rgba(168,242,245,0.8); text-shadow: 0 0 8px rgba(0,0,0,0.95); pointer-events: none;
+}
+.orb:hover {
+  border-color: var(--primary);
+  box-shadow:
+    0 0 40px rgba(95,227,232,0.6),
+    inset 0 0 24px rgba(95,227,232,0.25),
+    inset 0 2px 0 rgba(255,255,255,0.08);
+}
+.orb:active { transform: scale(0.96); }
+/* 点击反馈：放大 + 强光 + 扩散光环（三个行星按钮共用） */
+.orb.clicked {
+  animation: orbClickPulse 0.5s ease-out;
+}
+.orb.clicked::after {
+  content: '';
+  position: absolute; inset: -8px; border-radius: 50%;
+  border: 2px solid rgba(95,227,232,0.9);
+  box-shadow: 0 0 30px rgba(95,227,232,0.8);
+  animation: orbRingExpand 0.5s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes orbClickPulse {
+  0%   { transform: scale(1); box-shadow: 0 0 24px rgba(95,227,232,0.4); }
+  40%  { transform: scale(1.12); box-shadow: 0 0 50px rgba(95,227,232,0.9), inset 0 0 30px rgba(95,227,232,0.5); }
+  100% { transform: scale(1); box-shadow: 0 0 24px rgba(95,227,232,0.4); }
+}
+@keyframes orbRingExpand {
+  0%   { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+.orb-side { width: 96px; height: 96px; animation: holoFloat 4.5s ease-in-out infinite; }
+.orb-left  { left: 4%; top: 11%; }
+.orb-right { right: 4%; top: 11%; animation-delay: -2.25s; }
+
+/* ---- 木星（机库）：太阳系最大气态巨行星 ----
+ * 纬向"带与区"交替条纹 + 大红斑（反气旋风暴，直径大于地球）+ 四颗伽利略卫星（木卫一~四） */
+.orb-left {
+  border-color: rgba(235,205,165,0.55);
+  background:
+    radial-gradient(ellipse 13px 6px at 67% 63%, rgba(196,74,38,0.95) 0%, rgba(196,74,38,0.5) 62%, rgba(196,74,38,0) 78%),
+    linear-gradient(180deg,
+      #aebfcc 0%, #aebfcc 9%,
+      #7e96ab 9%, #7e96ab 16%,
+      #d6bf9e 16%, #d6bf9e 27%,
+      #b0835a 27%, #b0835a 34%,
+      #e6d2b4 34%, #e6d2b4 44%,
+      #bd9166 44%, #bd9166 52%,
+      #ead9c0 52%, #ead9c0 62%,
+      #9e6f4a 62%, #9e6f4a 70%,
+      #d6bf9e 70%, #d6bf9e 80%,
+      #7e96ab 80%, #7e96ab 88%,
+      #bda88c 88%, #bda88c 100%);
+  box-shadow:
+    0 0 26px rgba(214,164,107,0.4),
+    inset -8px -6px 16px rgba(0,0,0,0.62),
+    inset 6px 6px 14px rgba(255,240,220,0.14);
+}
+.orb-left .orb-deco::before {
+  content: ''; position: absolute; left: 50%; top: 50%;
+  width: 128%; height: 42%; margin: -21% 0 0 -64%;
+  border: 1px dashed rgba(200,225,235,0.35); border-radius: 50%;
+  transform: rotate(-15deg);
+}
+/* 伽利略卫星：精确落在倾斜轨道上的 4 颗亮点（硫黄/冰/岩石质地） */
+.orb-left .orb-deco::after {
+  content: ''; position: absolute; left: 50%; top: 50%;
+  width: 2.5px; height: 2.5px; margin: -1.25px 0 0 -1.25px; border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    56px -6px 0 0 rgba(255,238,190,0.95),
+    -20px 24px 0 0 rgba(215,228,255,0.95),
+    -56px 6px 0 0 rgba(255,222,185,0.9),
+    20px -24px 0 0 rgba(228,222,210,0.85);
+}
+
+/* hover：青色辉光 + 保留行星明暗阴影（优先级高于 .orb:hover） */
+.orb-left:hover {
+  box-shadow:
+    0 0 40px rgba(95,227,232,0.6),
+    inset -8px -6px 16px rgba(0,0,0,0.62),
+    inset 6px 6px 14px rgba(255,240,220,0.14);
+}
+.orb-right:hover {
+  box-shadow:
+    0 0 40px rgba(95,227,232,0.6),
+    inset -8px -6px 16px rgba(0,0,0,0.6),
+    inset 6px 6px 12px rgba(255,250,232,0.18);
+}
+
+/* ---- 土星（设置）：淡金条带 + 环系统（外环/内环间为卡西尼缝）+ 泰坦（土卫六） ---- */
+.orb-right {
+  border-color: rgba(240,224,180,0.55);
+  background:
+    radial-gradient(ellipse 20px 8px at 50% 17%, rgba(252,244,214,0.5) 0%, rgba(252,244,214,0) 72%),
+    linear-gradient(180deg,
+      #e6dab4 0%, #e6dab4 12%,
+      #d2bf8a 12%, #d2bf8a 24%,
+      #f0e4c2 24%, #f0e4c2 38%,
+      #ccb47c 38%, #ccb47c 50%,
+      #eee0b8 50%, #eee0b8 64%,
+      #c2a974 64%, #c2a974 78%,
+      #e2d4aa 78%, #e2d4aa 100%);
+  box-shadow:
+    0 0 26px rgba(232,212,158,0.38),
+    inset -8px -6px 16px rgba(0,0,0,0.6),
+    inset 6px 6px 12px rgba(255,250,232,0.18);
+}
+.orb-right::before {   /* 外环（A/B 环，冰与岩石碎屑） */
+  content: ''; position: absolute; left: 50%; top: 50%;
+  width: 150%; height: 47%; margin: -23.5% 0 0 -75%;
+  border: 3px solid rgba(240,226,188,0.85); border-radius: 50%;
+  transform: rotate(-22deg); pointer-events: none;
+  box-shadow: 0 0 9px rgba(240,226,188,0.35);
+}
+.orb-right .orb-deco::after {  /* 内环：与外环之间留出卡西尼缝 */
+  content: ''; position: absolute; left: 50%; top: 50%;
+  width: 121%; height: 38%; margin: -19% 0 0 -60.5%;
+  border: 2px solid rgba(240,226,188,0.5); border-radius: 50%;
+  transform: rotate(-22deg); pointer-events: none;
+}
+.orb-right .orb-deco::before { /* 泰坦：土星最大卫星（橙色雾霾大气） */
+  content: ''; position: absolute; width: 5px; height: 5px; border-radius: 50%;
+  right: -7px; top: 20%;
+  background: radial-gradient(circle at 35% 30%, #f7cd90, #b87a3c);
+  box-shadow: 0 0 7px rgba(247,205,144,0.7);
+}
+
+/* ---- 地球（出击）：蓝色海洋 + 大陆 + 白云系 + 大气蓝晕 + 月球 ---- */
+.orb-main {
+  width: 128px; height: 128px; left: 50%; bottom: 64px; transform: translateX(-50%);
+  border-color: rgba(140,200,255,0.6);
+  background:
+    radial-gradient(ellipse 27px 7px at 30% 29%, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0) 72%),
+    radial-gradient(ellipse 17px 5px at 69% 54%, rgba(255,255,255,0.78) 0%, rgba(255,255,255,0) 72%),
+    radial-gradient(ellipse 15px 5px at 44% 77%, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0) 72%),
+    radial-gradient(ellipse 17px 11px at 63% 27%, rgba(94,148,78,0.95) 0%, rgba(94,148,78,0) 74%),
+    radial-gradient(ellipse 14px 15px at 29% 57%, rgba(108,128,68,0.9) 0%, rgba(108,128,68,0) 74%),
+    radial-gradient(ellipse 10px 7px at 56% 83%, rgba(118,138,88,0.85) 0%, rgba(118,138,88,0) 74%),
+    radial-gradient(circle at 38% 32%, #7ec8f0 0%, #1c5fa8 70%, #0d3a75 100%);
+  box-shadow:
+    0 0 44px rgba(90,170,255,0.45),
+    inset -10px -8px 20px rgba(0,10,40,0.55),
+    inset 6px 6px 16px rgba(200,235,255,0.2);
+  animation: holoFloatMain 5.5s ease-in-out infinite;
+}
+.orb-main::before {  /* 大气蓝晕（瑞利散射） */
+  content: ''; position: absolute; inset: -3px; border-radius: 50%;
+  box-shadow: inset 0 0 18px rgba(120,200,255,0.55), 0 0 22px rgba(100,180,255,0.35);
+  pointer-events: none;
+}
+.orb-main .orb-deco::before { /* 月球（地月系） */
+  content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%;
+  right: -16px; bottom: 4px;
+  background: radial-gradient(circle at 35% 30%, #ececf0, #8a8a92 75%);
+  box-shadow: 0 0 10px rgba(220,225,235,0.5), inset -3px -3px 6px rgba(0,0,0,0.4);
+}
+.orb-main:hover {
+  box-shadow:
+    0 0 60px rgba(95,227,232,0.85),
+    inset -10px -8px 20px rgba(0,10,40,0.55),
+    inset 6px 6px 16px rgba(200,235,255,0.2);
+}
+.orb-main:active { transform: translateX(-50%) scale(0.96); }
+.orb-main b { font-size: 20px; color: #fff; text-shadow: 0 0 14px var(--primary), 0 1px 3px rgba(0,0,0,0.9); }
+@keyframes holoFloat {
+  0%, 100% { margin-top: 0; }
+  50%      { margin-top: -5px; }
+}
+@keyframes holoFloatMain {
+  0%, 100% { margin-bottom: 0; }
+  50%      { margin-bottom: -7px; }
+}
+
+.menu-meta { display: flex; gap: 28px; margin-top: 16px; font-size: 12px; letter-spacing: 2px; color: rgba(159,216,232,0.75); }
+.meta-line span { color: var(--gold); font-weight: 700; }
+
+/* 星球环绕（主菜单背景：单条纤细轨道，天王星沿轨道缓慢公转） */
+.planet-orbit {
+  position: absolute; left: 50%; top: 36%; z-index: 0;
+  border-radius: 50%; pointer-events: none;
+  border: 1px solid rgba(95,227,232,0.14);   /* 可见轨道环：星球沿轨道走 */
+  box-shadow: 0 0 24px rgba(95,227,232,0.04) inset;
+}
+.planet-orbit.po2 { width: 300px; height: 300px; margin: -150px 0 0 -150px; animation: orbitSpin 58s linear infinite reverse; }
+@keyframes orbitSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.planet {
+  position: absolute; border-radius: 50%;
+  box-shadow: 0 0 18px rgba(95,227,232,0.35), inset -4px -4px 10px rgba(0,0,0,0.55);
+}
+.planet.pl2 { /* 天王星：淡青冰巨星 + 侧躺自转轴（97.8°）上的纤细暗环 */
+  width: 16px; height: 16px; top: -8px; left: 50%; margin-left: -8px;
+  background: radial-gradient(circle at 35% 30%, #d8f4f8, #6fb8c8 75%);
+}
+.planet.pl2::after {
+  content: ''; position: absolute; left: 50%; top: 50%;
+  width: 26px; height: 7px; margin: -3.5px 0 0 -13px;
+  border: 1.5px solid rgba(150,210,225,0.55); border-radius: 50%;
+  transform: rotate(-72deg);
+}
+
+/* 按钮 */
+.btn {
+  padding: 12px 20px; min-width: 160px;
+  font-family: inherit; font-size: 15px; letter-spacing: 3px;
+  color: #d8f4ff; cursor: pointer;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  transition: all 0.18s;
+}
+.btn:hover { background: rgba(0,229,255,0.12); box-shadow: 0 0 14px rgba(0,229,255,0.4); transform: translateY(-1px); }
+.btn-primary {
+  color: #03202a; font-weight: 700;
+  background: linear-gradient(135deg, #00e5ff, #00ffd5);
+  border: none; box-shadow: 0 0 18px rgba(0,229,255,0.5);
+}
+.btn-primary:hover { box-shadow: 0 0 26px rgba(0,229,255,0.8); }
+.btn-danger { color: #fff; border-color: rgba(255,34,68,0.5); }
+.btn-danger:hover { background: rgba(255,34,68,0.2); box-shadow: 0 0 14px rgba(255,34,68,0.4); }
+
+/* 机库 */
+.hangar-tabs { display: flex; gap: 10px; }
+.hangar-tab {
+  flex: 1; max-width: 150px;
+  padding: 8px 0;
+  background: rgba(12, 22, 52, 0.42);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(95, 227, 232, 0.25);
+  border-radius: 999px;
+  color: #aac6e8; font-family: inherit; font-size: 13px; letter-spacing: 2px;
+  cursor: pointer; transition: all 0.18s;
+}
+.hangar-tab:hover { border-color: var(--primary); color: #dffaff; }
+.hangar-tab.selected {
+  background: linear-gradient(135deg, rgba(95,227,232,0.28), rgba(199,155,255,0.28));
+  border-color: var(--primary); color: #fff;
+  box-shadow: 0 0 14px rgba(95, 227, 232, 0.45);
+}
+.hangar-pane { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; }
+.hangar-ship { display: flex; align-items: center; gap: 18px; }
+#shipPreview { width: 150px; height: 150px; filter: drop-shadow(0 0 12px var(--primary)); }
+#dronePreview { width: 150px; height: 150px; filter: drop-shadow(0 0 12px var(--gold)); }
+.nav-arrow { font-size: 22px; background: none; border: none; color: var(--primary); cursor: pointer; }
+.ship-name { font-size: 20px; letter-spacing: 4px; color: #fff; }
+.ship-stats { font-size: 12px; color: #9fd8e8; text-align: center; line-height: 1.7; }
+.drone-tip { font-size: 11px; color: #8fb4d8; text-align: center; line-height: 1.7; max-width: 310px; }
+.upgrade-list { width: 100%; max-width: 340px; max-height: 28vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.upgrade-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px;
+  background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px;
+}
+.upgrade-row .u-info { flex: 1; }
+.upgrade-row .u-name { font-size: 13px; color: #fff; }
+.upgrade-row .u-desc { font-size: 11px; color: #9fd8e8; }
+.upgrade-row .u-dots { font-size: 11px; color: var(--primary); letter-spacing: 2px; }
+.upgrade-row .u-buy {
+  margin-left: 10px; padding: 6px 12px; font-size: 12px;
+  color: #03202a; font-weight: 700; cursor: pointer;
+  background: linear-gradient(135deg, #ffc400, #ffa000);
+  border: none; border-radius: 6px;
+}
+.upgrade-row .u-buy:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* 设置 */
+.setting-row {
+  display: flex; justify-content: space-between; align-items: center;
+  width: 220px; padding: 8px 12px;
+  background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px;
+  font-size: 14px;
+}
+.setting-row input { width: 20px; height: 20px; accent-color: var(--primary); }
+/* 视角模式分段按钮 */
+.view-seg { display: flex; gap: 6px; }
+.seg-btn {
+  padding: 5px 12px; font-family: inherit; font-size: 12px; letter-spacing: 1px;
+  color: rgba(216,244,255,0.7); cursor: pointer;
+  background: rgba(10,20,48,0.5); border: 1px solid var(--panel-border); border-radius: 6px;
+  transition: all 0.15s;
+}
+.seg-btn:hover { border-color: var(--primary); color: #fff; }
+.seg-btn.selected {
+  color: #062a2e; background: var(--primary); border-color: var(--primary);
+  box-shadow: 0 0 12px rgba(95,227,232,0.5); font-weight: 700;
+}
+
+/* 存档询问浮层 */
+.storage-ask { background: rgba(3, 6, 20, 0.72); z-index: 60; }
+.storage-card {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  max-width: 320px; padding: 28px 26px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  box-shadow: 0 0 40px rgba(95,227,232,0.25);
+  animation: pop 0.4s cubic-bezier(0.2, 2.2, 0.4, 1);
+}
+.storage-title { font-size: 20px; letter-spacing: 4px; color: #fff; text-shadow: 0 0 12px var(--primary); }
+.storage-desc { font-size: 13px; line-height: 1.9; color: #bfe0f0; text-align: center; }
+.storage-btns { display: flex; gap: 12px; }
+.storage-btns .btn { min-width: 120px; }
+.storage-tip { font-size: 11px; color: #8fb4d8; letter-spacing: 1px; }
+
+/* 结算 */
+.rank {
+  font-size: 80px; font-weight: 900; color: var(--gold);
+  text-shadow: 0 0 30px var(--gold);
+  animation: pop 0.5s cubic-bezier(0.2, 2.2, 0.4, 1);
+}
+@keyframes pop { from { transform: scale(3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.go-score { font-size: 32px; font-weight: 900; color: #fff; text-shadow: 0 0 14px var(--primary); }
+.go-detail { font-size: 13px; color: #9fd8e8; text-align: center; line-height: 1.8; }
+
+/* 警告横幅 */
+#warning {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 34px; font-weight: 900; letter-spacing: 4px; color: #fff;
+  background: repeating-linear-gradient(45deg, rgba(255,122,140,0.75) 0 24px, rgba(30,10,30,0.9) 24px 48px);
+  text-shadow: 0 0 16px #fff;
+  animation: warnflash 0.5s steps(2) infinite;
+}
+@keyframes warnflash { 50% { opacity: 0.55; } }
+
+/* 全屏闪光 */
+#flash { position: absolute; inset: 0; pointer-events: none; background: #fff; opacity: 0.9; }
+#vignette {
+  position: absolute; inset: 0; pointer-events: none;
+  box-shadow: inset 0 0 120px rgba(255,122,140,0.7);
+}
+
+/* ---------- 难度选择（毛玻璃胶囊） ---------- */
+.diff-row { display: flex; gap: 10px; justify-content: center; }
+.diff-btn {
+  flex: 1; max-width: 92px;
+  padding: 8px 0;
+  background: rgba(12, 22, 52, 0.42);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(95, 227, 232, 0.25);
+  border-radius: 999px;
+  color: #aac6e8; font-family: inherit; font-size: 13px; letter-spacing: 2px;
+  cursor: pointer; transition: all 0.18s;
+}
+.diff-btn:hover { border-color: var(--primary); color: #dffaff; }
+.diff-btn.selected {
+  background: linear-gradient(135deg, rgba(95,227,232,0.28), rgba(199,155,255,0.28));
+  border-color: var(--primary);
+  color: #fff;
+  box-shadow: 0 0 14px rgba(95, 227, 232, 0.45);
+}
+.diff-desc { font-size: 11px; color: #8fb4d8; text-align: center; min-height: 16px; }
+
+/* 菜单页：关卡选择入口（细长幽灵按钮，不抢三大选项焦点） */
+.btn-stages {
+  min-width: 0; padding: 7px 22px; margin-top: 8px;
+  font-size: 12px; letter-spacing: 2px;
+  color: rgba(216,244,255,0.85);
+  background: rgba(12, 22, 52, 0.35);
+  border: 1px solid rgba(95, 227, 232, 0.3);
+  border-radius: 999px;
+}
+.btn-stages:hover {
+  color: #fff; transform: none;
+  background: rgba(0,229,255,0.14);
+  box-shadow: 0 0 14px rgba(0,229,255,0.35);
+}
+
+/* ---------- 关卡选择 ---------- */
+#screen-stages { justify-content: flex-start; overflow-y: auto; }
+#screen-stages > * { flex-shrink: 0; }
+#screen-stages .screen-title { margin-top: 3vh; }
+.ss-diff { display: flex; gap: 10px; justify-content: center; margin-bottom: 10px; }
+.ss-diff-btn {
+  flex: 1; max-width: 92px;
+  padding: 8px 0;
+  background: rgba(12, 22, 52, 0.42);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(95, 227, 232, 0.25);
+  border-radius: 999px;
+  color: #aac6e8; font-family: inherit; font-size: 13px; letter-spacing: 2px;
+  cursor: pointer; transition: all 0.18s;
+}
+.ss-diff-btn:hover { border-color: var(--primary); color: #dffaff; }
+.ss-diff-btn.selected {
+  background: linear-gradient(135deg, rgba(95,227,232,0.28), rgba(199,155,255,0.28));
+  border-color: var(--primary); color: #fff;
+  box-shadow: 0 0 14px rgba(95, 227, 232, 0.45);
+}
+.ss-info { font-size: 12px; letter-spacing: 2px; color: var(--primarySoft); margin-bottom: 12px; }
+/* 50 关网格：5 列 */
+.ss-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+  width: 100%; max-width: 520px; margin-bottom: 14px;
+}
+.ss-cell {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 2px 6px;
+  background: rgba(10, 20, 46, 0.55);
+  border: 1px solid rgba(95, 227, 232, 0.25);
+  border-radius: 8px;
+  color: #d8f4ff; font-family: inherit; cursor: pointer;
+  transition: all 0.15s;
+}
+.ss-cell b { font-size: 16px; line-height: 1.1; }
+.ss-cell i { font-style: normal; font-size: 9px; color: rgba(168,200,240,0.7); letter-spacing: 0; }
+.ss-cell s { text-decoration: none; font-size: 9px; color: var(--gold); letter-spacing: 0; }
+.ss-cell:hover { border-color: var(--primary); box-shadow: 0 0 12px rgba(0,229,255,0.35); transform: translateY(-1px); }
+.ss-cell.next { border-color: var(--gold); box-shadow: 0 0 10px rgba(255,217,138,0.35); }
+.ss-cell.locked {
+  opacity: 0.38; cursor: not-allowed;
+  border-style: dashed; border-color: rgba(120,150,190,0.35);
+}
+.ss-cell.locked b { color: #7f93b8; }
+/* 本难度首领池 */
+.ss-boss { width: 100%; max-width: 520px; margin-bottom: 16px; text-align: center; }
+.ss-boss-title { font-size: 11px; letter-spacing: 2px; color: rgba(168,200,240,0.6); margin-bottom: 6px; }
+.ss-boss-item {
+  display: inline-block; margin: 3px 4px; padding: 4px 12px;
+  font-size: 11px; color: #d8f4ff; letter-spacing: 1px;
+  background: rgba(199,155,255,0.1);
+  border: 1px solid rgba(199,155,255,0.3); border-radius: 999px;
+}
+
+/* ---------- 升级分组标题 ---------- */
+.upgrade-group {
+  display: flex; align-items: baseline; gap: 8px;
+  margin: 14px 0 6px; padding-bottom: 4px;
+  border-bottom: 1px solid rgba(199,155,255,0.3);
+}
+.upgrade-group span { font-size: 14px; font-weight: 700; color: var(--accent); letter-spacing: 2px; }
+.upgrade-group i { font-style: normal; font-size: 10px; color: rgba(168,200,240,0.5); letter-spacing: 1px; }
+
+/* ---------- 过关结算 ---------- */
+.clear-title {
+  font-size: 34px; font-weight: 900; letter-spacing: 3px;
+  background: linear-gradient(90deg, var(--mint), var(--primary), var(--accent));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  text-shadow: 0 0 24px rgba(127,232,192,0.35);
+}
+.clear-sub { color: var(--primarySoft); font-size: 14px; letter-spacing: 2px; margin-bottom: 14px; }
+.clear-detail { font-size: 14px; color: #bfe0f0; line-height: 2; text-align: center; }
+.clear-bonus { font-size: 18px; color: var(--gold); margin: 10px 0 6px; text-shadow: 0 0 12px rgba(255,217,138,0.6); }
+/* Boss 死后温馨英文句子 */
+.clear-sentence {
+  max-width: 320px; margin-bottom: 16px;
+  font-size: 13px; font-style: italic; line-height: 1.8; text-align: center;
+  color: var(--mint); text-shadow: 0 0 10px rgba(127,232,192,0.45);
+  animation: sentenceIn 0.8s ease-out;
+}
+.clear-sentence:empty { display: none; }
+@keyframes sentenceIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* 过关结算屏：词汇表较长时整体可滚动（最终关 50 关总表） */
+#screen-stageclear { justify-content: flex-start; overflow-y: auto; }
+#screen-stageclear > * { flex-shrink: 0; }
+#screen-stageclear .clear-title { margin-top: 5vh; }
+
+/* ---------- 通关词汇表（逐关：已击打 / 未打消 + 词性 + 释义） ---------- */
+.clear-words { width: 100%; max-width: 660px; margin-top: 4px; text-align: left; }
+.cw-title {
+  text-align: center; font-size: 14px; font-weight: 700; letter-spacing: 3px;
+  color: var(--gold); text-shadow: 0 0 12px rgba(255,217,138,0.5); margin-bottom: 10px;
+}
+.cw-stage {
+  border: 1px solid rgba(95,227,232,0.22); border-left: 3px solid var(--primary);
+  border-radius: 8px; background: rgba(8, 14, 34, 0.6);
+  padding: 10px 12px; margin-bottom: 10px;
+}
+.cw-stage-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  font-size: 13px; font-weight: 700; color: #d8f4ff; letter-spacing: 1px;
+  padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px dashed rgba(95,227,232,0.18);
+}
+.cw-count { font-size: 11px; font-weight: 400; color: rgba(168,200,240,0.65); letter-spacing: 0; }
+.cw-group { margin-bottom: 6px; }
+.cw-group:last-child { margin-bottom: 0; }
+.cw-group > em {
+  display: inline-block; font-style: normal; font-size: 10px; font-weight: 700;
+  letter-spacing: 2px; padding: 1px 8px; border-radius: 20px; margin-bottom: 5px;
+}
+.cw-tag-hit { color: #7fe8c0; background: rgba(127,232,192,0.12); border: 1px solid rgba(127,232,192,0.35); }
+.cw-tag-miss { color: #9aa8c4; background: rgba(154,168,196,0.1); border: 1px solid rgba(154,168,196,0.3); }
+.cw-list { display: flex; flex-wrap: wrap; gap: 5px; }
+.cw-word {
+  display: inline-flex; align-items: baseline; gap: 5px;
+  font-size: 12px; padding: 2px 8px; border-radius: 5px; line-height: 1.7;
+}
+.cw-word b { font-weight: 700; letter-spacing: 0.5px; }
+.cw-word i {
+  font-style: normal; font-size: 9px; padding: 0 4px; border-radius: 3px;
+  letter-spacing: 0; transform: translateY(-1px);
+}
+.cw-word s { text-decoration: none; }
+.cw-word.hit { background: rgba(127,232,192,0.08); border: 1px solid rgba(127,232,192,0.28); }
+.cw-word.hit b { color: #b6f5e0; }
+.cw-word.hit i { color: #7fe8c0; background: rgba(127,232,192,0.14); }
+.cw-word.hit s { color: rgba(182,245,224,0.6); }
+.cw-word.miss { background: rgba(90, 100, 130, 0.1); border: 1px dashed rgba(154,168,196,0.3); }
+.cw-word.miss b { color: #aeb9d0; }
+.cw-word.miss i { color: #8b98b5; background: rgba(139,152,181,0.15); }
+.cw-word.miss s { color: rgba(174,185,208,0.5); }
+.cw-empty { font-size: 11px; color: rgba(168,200,240,0.45); padding: 2px 0; }
+
+/* 手机竖屏适配 */
+@media (orientation: portrait) {
+  #stage { transform: translate(-50%, -50%); }
+}
+
+/* ---------- 开机：战机升空发射序列 ---------- */
+#screen-boot {
+  background:
+    radial-gradient(ellipse at 50% 25%, rgba(40,55,110,0.35) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 70%, rgba(60,30,90,0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 15%, rgba(20,50,80,0.3) 0%, transparent 50%),
+    #02040f;
+  overflow: hidden;
+}
+/* ---------- 待机 / 点火两态 ----------
+ * idle：页面加载后的待机悬停（全部发射动画暂停，音频须等首次点击手势）
+ * go ：首次点击点火，动画与引擎音效同零帧启动 */
+#screen-boot.idle *:not(.boot-hint):not(.boot-jet) { animation-play-state: paused; }
+#screen-boot.idle .boot-jet { animation: jetHover 2.2s ease-in-out infinite; }
+#screen-boot.idle .boot-title { animation: titleStandby 2.4s ease-in-out infinite; opacity: 1; }
+@keyframes jetHover {
+  0%, 100% { transform: translateY(-40vh); }
+  50%      { transform: translateY(-42vh); }
+}
+@keyframes titleStandby {
+  0%, 100% { opacity: 0.9; text-shadow: 0 0 18px var(--primary), 0 0 60px rgba(95,227,232,0.8); }
+  50%      { opacity: 1; text-shadow: 0 0 26px var(--primary), 0 0 80px rgba(95,227,232,1); }
+}
+/* 点击点火提示（待机态常驻闪烁） */
+.boot-hint {
+  position: absolute; bottom: 7%; left: 0; right: 0; z-index: 6;
+  text-align: center; font-size: 13px; letter-spacing: 4px; font-weight: 700;
+  color: #fff; text-shadow: 0 0 12px var(--primary), 0 0 30px rgba(95,227,232,0.6);
+  animation: hintBlink 1.4s ease-in-out infinite;
+}
+@keyframes hintBlink { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+/* 深空星点（多层次 + 星云，慢速下移 = 上升的相对运动） */
+.boot-deep {
+  position: absolute; inset: -50% 0 0 0; pointer-events: none;
+  background-image:
+    /* 大星 */
+    radial-gradient(1.5px 1.5px at 15% 12%, rgba(255,255,255,0.9) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 80% 18%, rgba(199,155,255,0.8) 50%, transparent 51%),
+    radial-gradient(2px 2px at 45% 30%, rgba(168,242,245,0.85) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 90% 45%, rgba(255,217,138,0.75) 50%, transparent 51%),
+    radial-gradient(2px 2px at 8% 55%, rgba(127,232,192,0.8) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 62% 62%, rgba(255,255,255,0.85) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 28% 72%, rgba(199,155,255,0.75) 50%, transparent 51%),
+    radial-gradient(2px 2px at 94% 82%, rgba(168,242,245,0.85) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 3% 88%, rgba(255,217,138,0.7) 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 55% 92%, rgba(255,255,255,0.8) 50%, transparent 51%),
+    /* 小星 */
+    radial-gradient(1px 1px at 12% 22%, rgba(168,242,245,0.6) 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 8%, rgba(199,155,255,0.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 42% 42%, rgba(255,217,138,0.4) 50%, transparent 51%),
+    radial-gradient(1px 1px at 88% 35%, rgba(168,242,245,0.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 8% 38%, rgba(127,232,192,0.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 65% 25%, rgba(168,242,245,0.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 25% 48%, rgba(199,155,255,0.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 92% 28%, rgba(168,242,245,0.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 3% 68%, rgba(255,217,138,0.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 55% 15%, rgba(168,242,245,0.55) 50%, transparent 51%),
+    /* 星云柔斑 */
+    radial-gradient(40px 40px at 30% 20%, rgba(95,227,232,0.10) 0%, transparent 70%),
+    radial-gradient(50px 50px at 70% 60%, rgba(199,155,255,0.08) 0%, transparent 70%),
+    radial-gradient(35px 35px at 15% 75%, rgba(127,232,192,0.07) 0%, transparent 70%);
+  background-size: 100% 60%;
+  animation: bootDeepFall 6s linear forwards;
+  opacity: 0.95;
+}
+@keyframes bootDeepFall { from { transform: translateY(-30%); } to { transform: translateY(0%); } }
+/* 高速流光线条（上升速度感） */
+.boot-streaks {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  background-image:
+    linear-gradient(180deg, transparent 0%, rgba(95,227,232,0.25) 50%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, rgba(199,155,255,0.18) 50%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, rgba(95,227,232,0.2) 50%, transparent 100%);
+  background-size: 1px 120px, 1px 90px, 1px 150px;
+  background-position: 22% 0, 55% 0, 83% 0;
+  background-repeat: repeat-y;
+  animation: streakOn 0.5s ease-in 1.1s forwards, streakFall 0.55s linear 1.1s infinite;
+}
+@keyframes streakOn { to { opacity: 1; } }
+@keyframes streakFall { from { background-position: 22% -150px, 55% -90px, 83% -200px; } to { background-position: 22% 700px, 55% 760px, 83% 650px; } }
+
+/* 曲速环（加速段从中心爆开的共振环） */
+.boot-rings { position: absolute; left: 50%; top: 50%; z-index: 1; pointer-events: none; }
+.boot-rings i {
+  position: absolute; left: 50%; top: 50%;
+  width: 120px; height: 120px; margin: -60px 0 0 -60px;
+  border: 2px solid rgba(95,227,232,0.6); border-radius: 50%;
+  box-shadow: 0 0 24px rgba(95,227,232,0.35), inset 0 0 18px rgba(95,227,232,0.25);
+  opacity: 0;
+  animation: ringWarp 1.6s ease-out 0.9s infinite;
+}
+.boot-rings i:nth-child(2) { animation-delay: 1.25s; border-color: rgba(199,155,255,0.55); }
+.boot-rings i:nth-child(3) { animation-delay: 1.6s; border-color: rgba(127,232,192,0.55); }
+@keyframes ringWarp {
+  0%   { transform: scale(0.2); opacity: 0; }
+  20%  { opacity: 0.9; }
+  100% { transform: scale(6); opacity: 0; }
+}
+
+/* 二段高速线（更细更密：加速冲刺段爆发，速度感拉满） */
+.boot-streaks2 {
+  position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  background-image:
+    linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, rgba(127,232,192,0.45) 50%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, rgba(199,155,255,0.4) 50%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%),
+    linear-gradient(180deg, transparent 0%, rgba(95,227,232,0.45) 50%, transparent 100%);
+  background-size: 1px 160px, 2px 260px, 1px 120px, 1px 300px, 2px 180px, 1px 220px;
+  background-position: 10% 0, 30% 0, 48% 0, 62% 0, 78% 0, 92% 0;
+  background-repeat: repeat-y;
+  animation: streakOn2 0.4s ease-in 1.0s forwards, streakFall2 0.32s linear 1.0s infinite;
+}
+@keyframes streakOn2 { to { opacity: 1; } }
+@keyframes streakFall2 {
+  from { background-position: 10% -320px, 30% -420px, 48% -260px, 62% -480px, 78% -360px, 92% -400px; }
+  to   { background-position: 10% 1000px, 30% 1100px, 48% 980px, 62% 1150px, 78% 1040px, 92% 1080px; }
+}
+
+/* 点火闪白 + 起飞冲击闪白（两次爆闪） */
+.boot-flash {
+  position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  background: #fff; opacity: 0;
+  animation: bootFlash1 0.5s ease-out 0.22s, bootFlash2 0.7s ease-out 3.55s;
+}
+@keyframes bootFlash1 { 0% { opacity: 0; } 12% { opacity: 0.85; } 100% { opacity: 0; } }
+@keyframes bootFlash2 { 0% { opacity: 0; } 10% { opacity: 1; } 100% { opacity: 0; } }
+
+/* 故障风大标题（砸屏入场 + RGB 撕裂抖动） */
+.boot-title {
+  position: absolute; left: 0; right: 0; top: 28%; z-index: 3;
+  text-align: center; font-size: 34px; font-weight: 900; letter-spacing: 6px;
+  color: #fff; opacity: 0;
+  text-shadow: 0 0 18px var(--primary), 0 0 60px rgba(95,227,232,0.8);
+  animation: titleSlam 0.7s cubic-bezier(0.2, 1.8, 0.3, 1) 0.35s forwards,
+             titleGlitch 2.6s steps(2) 1.05s infinite;
+}
+@keyframes titleSlam {
+  0%   { opacity: 0; transform: scale(2.6); filter: blur(8px); letter-spacing: 30px; }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: scale(1); filter: blur(0); letter-spacing: 6px; }
+}
+@keyframes titleGlitch {
+  0%, 90%, 100% { text-shadow: 0 0 18px var(--primary), 0 0 60px rgba(95,227,232,0.8); transform: none; }
+  91% { text-shadow: -3px 0 #ff2e88, 3px 0 #00e5ff; transform: translateX(2px); }
+  94% { text-shadow: 3px 0 #ff2e88, -3px 0 #00e5ff; transform: translateX(-2px); }
+  97% { text-shadow: 0 0 18px var(--primary); transform: none; }
+}
+
+/* 战机主体（GPU 加速：全程 translateY 平滑加速，cubic-bezier ease-out 模拟持续加速，不消失，飞出屏幕） */
+.boot-jet {
+  position: absolute; left: 50%; top: 100%; z-index: 2;
+  width: 76px; height: 130px;
+  margin-left: -38px;
+  transform: translateY(0);
+  animation: jetRise 4.0s cubic-bezier(0.42, 0, 1, 1) forwards;
+  filter: drop-shadow(0 0 20px rgba(95,227,232,0.5));
+  will-change: transform;
+}
+@keyframes jetRise {
+  0%   { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(-130vh) rotate(1deg); filter: drop-shadow(0 0 60px rgba(95,227,232,1)); }
+}
+/* 战机引擎尾焰随加速变亮 */
+.jet-flame { animation: flameFlicker 0.11s ease-in-out infinite, flameGrow 4.0s cubic-bezier(0.42, 0, 1, 1) forwards; }
+@keyframes flameGrow { 0% { transform: translateX(-50%) scaleY(1); } 100% { transform: translateX(-50%) scaleY(2.5) scaleX(1.15); } }
+/* 画面冲击震动（战机飞离瞬间触发） */
+#screen-boot.shaking {
+  animation: bootShake 0.6s ease-out 3.6s;
+}
+@keyframes bootShake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-4px, 2px); }
+  20% { transform: translate(4px, -2px); }
+  30% { transform: translate(-3px, -3px); }
+  40% { transform: translate(3px, 3px); }
+  50% { transform: translate(-2px, 1px); }
+  60% { transform: translate(2px, -1px); }
+  80% { transform: translate(-1px, 1px); }
+}
+/* 叠化过渡层：战机飞出后暗化，平滑进入主菜单 */
+.boot-fade {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, rgba(4,7,22,0) 0%, rgba(4,7,22,0.95) 75%);
+  opacity: 0;
+  animation: fadeToMenu 1.2s ease-in 3.8s forwards;
+}
+@keyframes fadeToMenu { to { opacity: 1; } }
+.jet-hull {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, #eafcff 0%, #cfeef4 45%, #7fa8b8 100%);
+  clip-path: polygon(50% 0%, 60% 30%, 96% 66%, 96% 80%, 58% 68%, 54% 90%, 66% 100%, 34% 100%, 46% 90%, 42% 68%, 4% 80%, 4% 66%, 40% 30%);
+}
+.jet-cockpit {
+  position: absolute; left: 50%; top: 22%; transform: translateX(-50%);
+  width: 14px; height: 20px; border-radius: 50% 50% 60% 60%;
+  background: radial-gradient(circle at 40% 30%, #bffcff, #2a7a9a 70%);
+  box-shadow: 0 0 10px rgba(95,227,232,0.9);
+}
+.jet-flame {
+  position: absolute; left: 50%; bottom: -36px; transform: translateX(-50%);
+  width: 16px; height: 42px;
+  background: radial-gradient(ellipse at 50% 0%, #ffffff 0%, #7FE8C0 30%, rgba(95,227,232,0.75) 55%, rgba(95,227,232,0) 100%);
+  border-radius: 50% 50% 60% 60% / 18% 18% 90% 90%;
+  transform-origin: top center;
+  animation: flameFlicker 0.11s ease-in-out infinite;
+  filter: blur(0.5px) drop-shadow(0 0 12px rgba(95,227,232,0.8));
+}
+@keyframes flameFlicker {
+  0%, 100% { transform: translateX(-50%) scaleY(1); }
+  50%      { transform: translateX(-50%) scaleY(1.28) scaleX(0.92); }
+}
+
+/* 发射序列文字 */
+.boot-text {
+  position: absolute; bottom: 12%; left: 0; right: 0; z-index: 3;
+  text-align: center; font-size: 12px; letter-spacing: 5px;
+  color: var(--primary);
+  text-shadow: 0 0 12px rgba(95,227,232,0.8);
+  animation: neonFlicker 1.8s ease-in-out infinite;
+}
+
+/* 科技感 HUD 覆盖层 */
+.boot-hud { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.hud-corner {
+  position: absolute; width: 22px; height: 22px;
+  border: 1.5px solid rgba(95,227,232,0.55);
+}
+.hud-corner.tl { top: 14px; left: 14px; border-right: none; border-bottom: none; }
+.hud-corner.tr { top: 14px; right: 14px; border-left: none; border-bottom: none; }
+.hud-corner.bl { bottom: 14px; left: 14px; border-right: none; border-top: none; }
+.hud-corner.br { bottom: 14px; right: 14px; border-left: none; border-top: none; }
+/* 扫描线 */
+.hud-scanline {
+  position: absolute; left: 0; right: 0; top: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(95,227,232,0.6), transparent);
+  animation: scanDown 4s linear infinite;
+}
+@keyframes scanDown { 0% { top: 0; opacity: 0.8; } 100% { top: 100%; opacity: 0.1; } }
+/* 状态数据 */
+.hud-stats {
+  position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 18px; font-size: 10px; letter-spacing: 1px;
+  color: rgba(168,242,245,0.8); font-family: 'Consolas', monospace;
+}
+.hud-stats b { color: var(--primary); font-weight: 700; text-shadow: 0 0 6px var(--primary); }
