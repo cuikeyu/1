@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>星域突击 STELLAR STRIKE</title>
+  <!-- 全部资源本地化：零外部依赖，断网可玩 -->
+  <link rel="stylesheet" href="css/style.css?v=38" />
+</head>
+<body>
+  <!-- 游戏舞台：等比例缩放居中 -->
+  <div id="stage">
+    <canvas id="game"></canvas>
+
+    <!-- 战斗 HUD -->
+    <div id="hud" class="hidden">
+      <div class="hud-top">
+        <div class="hud-left">
+          <div id="hpbar"><div id="hpfill"></div></div>
+          <div id="dronebar" class="hidden"><div id="dronefill"></div></div>
+          <div id="shieldicon" class="hidden">🛡 <span id="shieldcount">0</span></div>
+          <div id="slowicon" class="hidden">⏱ <span id="slowtime">0.0</span></div>
+        </div>
+        <div class="hud-center">
+          <div class="hud-level" id="level">LV.1</div>
+          <div class="hud-wave" id="wave">WAVE 01</div>
+          <div class="hud-time" id="stagetime">00:00</div>
+        </div>
+        <div class="hud-right">
+          <div class="hud-score" id="score">0</div>
+          <div class="hud-coins">★ <span id="coinCount">0</span></div>
+          <!-- 暂停按钮置于右下信息流末端（score/金币下方），避免遮挡星星数 -->
+          <button id="btnPause" class="hud-pause" title="暂停 (P)">II</button>
+        </div>
+      </div>
+
+      <!-- 当前波次歼敌进度条 -->
+      <div id="waveprogress" class="hidden"><div id="wavefill"></div></div>
+
+      <div id="bossbar" class="hidden">
+        <div id="bossback"><div id="bossfill"></div></div>
+        <div id="bossname">BOSS</div>
+      </div>
+
+      <div id="combo" class="hidden"></div>
+
+      <div class="hud-bottom">
+        <div id="bombcount" class="hud-bomb">
+          <div class="bomb-icon">◆</div><span id="bombnum">2</span>
+        </div>
+        <div id="chargewrap"><div id="chargefill"></div></div>
+      </div>
+    </div>
+
+    <!-- 开机：战机升空发射序列（待机悬停，首次点击点火启动） -->
+    <div id="screen-boot" class="screen shaking idle">
+      <div class="boot-deep" aria-hidden="true"></div>
+      <div class="boot-rings" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="boot-streaks" aria-hidden="true"></div>
+      <div class="boot-streaks2" aria-hidden="true"></div>
+      <div class="boot-hud" aria-hidden="true">
+        <div class="hud-corner tl"></div><div class="hud-corner tr"></div>
+        <div class="hud-corner bl"></div><div class="hud-corner br"></div>
+        <div class="hud-scanline"></div>
+        <div class="hud-stats">
+          <span>THRUST <b id="bootThrust">0</b>%</span>
+          <span>VEL <b id="bootVel">0</b> km/s</span>
+          <span>ALT <b id="bootAlt">0</b> km</span>
+        </div>
+      </div>
+      <div class="boot-jet" aria-hidden="true">
+        <div class="jet-hull"></div>
+        <div class="jet-cockpit"></div>
+        <div class="jet-flame"></div>
+      </div>
+      <div class="boot-title" aria-hidden="true">STELLAR STRIKE</div>
+      <div class="boot-fade" aria-hidden="true"></div>
+      <div class="boot-flash" aria-hidden="true"></div>
+      <div class="boot-text" id="bootText">STANDBY · 系统待机</div>
+      <div class="boot-hint" id="bootHint" aria-hidden="true">点击点火 · CLICK TO LAUNCH</div>
+    </div>
+
+    <!-- 主菜单：全息环形 UI -->
+    <div id="screen-menu" class="screen">
+      <div class="menu-deep" aria-hidden="true"></div>
+      <div class="planet-orbit po2" aria-hidden="true"><div class="planet pl2"></div></div>
+      <div class="menu-hero">
+        <div class="holo-ring r1" aria-hidden="true"></div>
+        <div class="menu-frame" aria-hidden="true"><i class="mf-tl"></i><i class="mf-tr"></i><i class="mf-bl"></i><i class="mf-br"></i></div>
+        <div class="menu-core">
+          <h1 class="logo-title">STELLAR<span>STRIKE</span></h1>
+          <p class="logo-sub">星域突击</p>
+          <div class="logo-tag">HOLO · ASSAULT · PROTOCOL</div>
+        </div>
+        <div class="orb-selector" id="orbSelector" aria-hidden="true"></div>
+        <button class="orb orb-side orb-left" data-action="hangar"><span class="orb-deco" aria-hidden="true"></span><b>机库</b><i>HANGAR</i><span class="orb-planet">木星 · JUPITER</span></button>
+        <button class="orb orb-side orb-right" data-action="settings"><span class="orb-deco" aria-hidden="true"></span><b>设置</b><i>SYSTEM</i><span class="orb-planet">土星 · SATURN</span></button>
+        <button class="orb orb-main" data-action="start"><span class="orb-deco" aria-hidden="true"></span><b id="launchText">出 击</b><i id="launchSub">LAUNCH</i><span class="orb-planet">地球 · EARTH</span></button>
+      </div>
+      <div class="menu-foot">
+        <div class="diff-row" id="diffRow">
+          <button class="diff-btn" data-diff="easy">简单</button>
+          <button class="diff-btn selected" data-diff="normal">普通</button>
+          <button class="diff-btn" data-diff="hard">困难</button>
+        </div>
+        <div class="diff-desc" id="diffDesc">标准的星域巡逻节奏</div>
+        <button class="btn btn-stages" data-action="stages">关卡选择 · STAGE SELECT</button>
+        <div class="menu-meta">
+          <div class="meta-line">最高分 <span id="menuHigh">0</span></div>
+          <div class="meta-line">金币 <span id="menuCoins">0</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 机库 -->
+    <div id="screen-hangar" class="screen hidden">
+      <h2 class="screen-title">机库 / HANGAR</h2>
+      <div class="hangar-tabs">
+        <button class="hangar-tab selected" data-tab="ship">主机 · SHIPS</button>
+        <button class="hangar-tab" data-tab="drone">僚机 · DRONES</button>
+      </div>
+      <!-- 主机面板 -->
+      <div class="hangar-pane" id="pane-ship">
+        <div class="hangar-ship">
+          <button class="nav-arrow" id="shipPrev">◀</button>
+          <canvas id="shipPreview" width="160" height="160"></canvas>
+          <button class="nav-arrow" id="shipNext">▶</button>
+        </div>
+        <div class="ship-name" id="shipName">突击号</div>
+        <div class="ship-stats" id="shipStats"></div>
+        <button class="btn btn-primary" id="shipSelect">选用 / 解锁</button>
+        <div class="upgrade-list" id="upgradeList"></div>
+      </div>
+      <!-- 僚机面板（小型备用战机：金币购买） -->
+      <div class="hangar-pane hidden" id="pane-drone">
+        <div class="hangar-ship">
+          <button class="nav-arrow" id="dronePrev">◀</button>
+          <canvas id="dronePreview" width="160" height="160"></canvas>
+          <button class="nav-arrow" id="droneNext">▶</button>
+        </div>
+        <div class="ship-name" id="droneName">萤火虫</div>
+        <div class="ship-stats" id="droneStats"></div>
+        <button class="btn btn-primary" id="droneSelect">装备 / 解锁</button>
+        <div class="drone-tip">僚机随主战机一同出击：拥有独立血条（宽度为主机一半），可被敌弹击落；射速较旧款略有提升</div>
+      </div>
+      <button class="btn" data-action="back-menu">返回主菜单</button>
+    </div>
+
+    <!-- 关卡选择：每个难度 50 关，逐关解锁，可直接进入已解锁关卡 -->
+    <div id="screen-stages" class="screen hidden">
+      <h2 class="screen-title">关卡选择 / STAGE SELECT</h2>
+      <div class="ss-diff" id="ssDiff">
+        <button class="ss-diff-btn" data-diff="easy">简单</button>
+        <button class="ss-diff-btn" data-diff="normal">普通</button>
+        <button class="ss-diff-btn" data-diff="hard">困难</button>
+      </div>
+      <div class="ss-info" id="ssInfo">普通 · 已解锁 1/50</div>
+      <div class="ss-grid" id="ssGrid"></div>
+      <div class="ss-boss" id="ssBoss"></div>
+      <button class="btn" data-action="back-menu">返回主菜单</button>
+    </div>
+
+    <!-- 设置 -->
+    <div id="screen-settings" class="screen hidden">
+      <h2 class="screen-title">设置 / SETTINGS</h2>
+      <div class="setting-row"><span>背景音乐</span><input type="checkbox" id="setBgm" /></div>
+      <div class="setting-row"><span>音效</span><input type="checkbox" id="setSfx" /></div>
+      <div class="setting-row"><span>画面震动</span><input type="checkbox" id="setShake" /></div>
+      <div class="setting-row"><span>视角模式</span>
+        <div class="view-seg" id="viewSeg">
+          <button class="seg-btn" data-view="standard">标准</button>
+          <button class="seg-btn" data-view="dynamic">动态</button>
+          <button class="seg-btn" data-view="wide">广阔</button>
+        </div>
+      </div>
+      <div class="setting-row"><span>进度存档</span><input type="checkbox" id="setStorage" /></div>
+      <button class="btn" data-action="back-menu">返回主菜单</button>
+      <button class="btn btn-danger" id="btnReset">重置存档</button>
+    </div>
+
+    <!-- 存档询问（首次进入页面弹出：是否保存进度） -->
+    <div id="screen-storage" class="screen storage-ask hidden">
+      <div class="storage-card">
+        <h2 class="storage-title">进度存档</h2>
+        <p class="storage-desc">是否在这台设备上保存你的游戏进度？<br>（金币 / 战机 / 僚机 / 最高分）</p>
+        <div class="storage-btns">
+          <button class="btn btn-primary" id="btnStorageYes">保存进度</button>
+          <button class="btn" id="btnStorageNo">暂不保存</button>
+        </div>
+        <p class="storage-tip">之后可在「设置」中随时更改</p>
+      </div>
+    </div>
+
+    <!-- 暂停 -->
+    <div id="screen-pause" class="screen hidden">
+      <h2 class="screen-title">已暂停 / PAUSED</h2>
+      <button class="btn btn-primary" id="btnResume">继续</button>
+      <button class="btn" id="btnRestart">重新开始</button>
+      <button class="btn" data-action="quit">返回主菜单</button>
+    </div>
+
+    <!-- 过关 -->
+    <div id="screen-stageclear" class="screen hidden">
+      <h2 class="screen-title clear-title">STAGE CLEAR</h2>
+      <div class="clear-sub" id="clearName">第 1 星域</div>
+      <div class="clear-detail" id="clearDetail"></div>
+      <div class="clear-bonus" id="clearBonus"></div>
+      <div class="clear-sentence" id="clearSentence"></div>
+      <div class="clear-words hidden" id="clearWords"></div>
+      <button class="btn btn-primary" id="btnNextStage">进入下一星域</button>
+      <button class="btn" data-action="quit">返回主菜单</button>
+    </div>
+
+    <!-- 结算 -->
+    <div id="screen-gameover" class="screen hidden">
+      <h2 class="screen-title">任务结束 / MISSION OVER</h2>
+      <div class="rank" id="rank">S</div>
+      <div class="go-score" id="goScore">0</div>
+      <div class="go-detail" id="goDetail"></div>
+      <button class="btn btn-primary" id="btnAgain">再来一局</button>
+      <button class="btn" data-action="hangar">机库</button>
+      <button class="btn" data-action="quit">主菜单</button>
+    </div>
+
+    <!-- 全屏警告横幅 -->
+    <div id="warning" class="hidden">⚠ WARNING ⚠</div>
+    <!-- 全屏闪白 -->
+    <div id="flash" class="hidden"></div>
+    <!-- 红色受伤晕影 -->
+    <div id="vignette" class="hidden"></div>
+  </div>
+
+  <!-- 脚本按依赖顺序加载（?v= 版本号用于更新后强制刷新缓存） -->
+  <script src="js/config.js?v=38"></script>
+  <script src="js/utils.js?v=38"></script>
+  <script src="js/save.js?v=38"></script>
+  <script src="js/audio.js?v=38"></script>
+  <script src="js/background.js?v=38"></script>
+  <script src="js/particles.js?v=38"></script>
+  <script src="js/entities.js?v=38"></script>
+  <script src="js/bosses.js?v=38"></script>
+  <script src="js/waves.js?v=38"></script>
+  <script src="js/ui.js?v=38"></script>
+  <script src="js/main.js?v=38"></script>
+</body>
+</html>
